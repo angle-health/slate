@@ -3,9 +3,6 @@ title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
-  - ruby
-  - python
-  - javascript
 
 toc_footers:
   - <a href='#'>Sign Up for a Developer Key</a>
@@ -19,221 +16,395 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the Angle Health API! This API is used to push and pull information to Angle Health. Use cases include broker integrations and data auditing.  
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+This documentation is meant to guide you in interacting with Angle Health's API in pushing and pulling member information, information on our benefits plan designs, and group enrollments. 
 
-This example API documentation page was created with [Slate](https://github.com/slatedocs/slate). Feel free to edit it and use it as a base for your own API's documentation.
+Angle Health currently offers multiple EPO and PPO medical plans as well as dental and vision. 
+
+Currently we support the API calls listed below. As required, we will evolve our API spec. 
 
 # Authentication
 
-> To authorize, use this code:
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-```
+> To obtain your authentication token:
 
 ```shell
 # With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+curl -X POST 
+  --header "Content-Type: application/json"
+  --header "Authorization: Basic <Base64Encode(<CLIENT_ID>:<CLIENT_SECRET>)>"
+  --data '{"auth_type": "client_credentials"}'
+  "http://api.anglehealth.com/auth"
 ```
 
-```javascript
-const kittn = require('kittn');
+> Example Response
 
-let api = kittn.authorize('meowmeowmeow');
+```json
+{
+  "access_token": "<ACCESS_TOKEN>",
+  "expires_in": 3600000,
+  "token_type": "Bearer"
+}
 ```
 
-> Make sure to replace `meowmeowmeow` with your API key.
+> Make sure to replace `AUTH_TOKEN` with your authentication token.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+Angle Health uses API credentials to authenticate users. When registering with Angle Health, you will be issued a `CLIENT_ID` and `CLIENT_SECRET` pair. Use this to obtain an authentication token which will be used in subsequent calls. Note the authentication token will expire 1 hour after issuing.  
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+Angle Health expects the authentication token to be included in all API requests to the server in a header that looks like the following:
 
-`Authorization: meowmeowmeow`
+`Authorization: Basic <AUTH_TOKEN>`
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+You must replace <code>AUTH_TOKEN</code> with your authentication token in subsequent calls.
 </aside>
 
-# Kittens
+# Plan Coverage Routes
 
-## Get All Kittens
+## dhdhhd
 
-```ruby
-require 'kittn'
+# Member Routes
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
+## New Hire Enrollment
 
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
 
 ```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/new_hire_enrollment"
 ```
 
-```javascript
-const kittn = require('kittn');
+> Body Parameter
 
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
+```json
+{
+  "lines_of_coverage": {
+    "dental": {
+      "enrolling_members": [
+        {"id": "<ID>",
+         "member_type": "employee",
+         "plan_name": "delta_dental"
+
+        },
+        {"id": "<ID>",
+         "member_type": "dependent",
+         "plan_name": "delta_dental"
+        }
+      ]
+    }, 
+
+    "medical": {
+      "enrolling_members": [
+        {"id": "<ID>",
+         "member_type": "employee",
+         "plan_name": "silver_ppo"
+        },
+        {"id": "<ID>",
+         "member_type": "dependent",
+         "plan_name": "bronze_epo"
+
+        }
+      ]
+    }
+  }
+}
 ```
 
-> The above command returns JSON structured like this:
+> The above command returns the following response:
 
 ```json
 [
   {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
+    "id": "<ID>",
+    "member_type": "employee",
+    "coverage_start_date": "<MM/DD/YY>",
+    "coverage_end_date": "<MM/DD/YY>",
+    "rate": "<RATE>",
+    "parent": "<ID>"
   },
   {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
+    "id": "<ID>",
+    "member_type": "dependent",
+    "coverage_start_date": "<MM/DD/YY>",
+    "coverage_end_date": "<MM/DD/YY>",
+    "rate": "<RATE>",
+    "parent": "<EMPLOYEE_PARENT_ID>"
   }
 ]
 ```
 
-This endpoint retrieves all kittens.
+This endpoint allows the broker to push new hire information to Angle Health's systems. Dependents are also pushed via this route. Coverage start and end dates along with the rates are returned. 
 
-### HTTP Request
-
-`GET http://example.com/api/kittens`
-
-### Query Parameters
-
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
+<aside class="notice">
+Note the id is set by the client that is pushing new hire enrollments. Angle Health will use the id to query member and employee information. 
 </aside>
 
-## Get a Specific Kitten
+### HTTP Request
 
-```ruby
-require 'kittn'
+`POST http://api.anglehealth.com/new_hire_enrollment`
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
+### Body Parameters
 
-```python
-import kittn
+Parameter | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+member_type | This indicates whether the member is an employee or dependent. 
+plan_name | Name of the Angle Health plan
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
+## Termination
+
 
 ```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/termination"
 ```
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
+> Body Parameter
 
 ```json
 {
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
+  "terminations": [
+    {
+      "id": "<ID>",
+      "last_work_date": "<MM/DD/YYYY>"
+    },
+    {
+      "id": "<ID>",
+      "last_work_date": "<MM/DD/YYYY>"
+    }
+  ]
 }
 ```
 
-This endpoint retrieves a specific kitten.
+> The above command returns the following response:
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+```json
+[
+  {
+    "id": "<ID>",
+    "member_type": "employee",
+    "coverage_end_date": "<END_DATE>",
+    "parent": "<ID>"
+  },
+  {
+    "id": "<ID>",
+    "member_type": "dependent",
+    "coverage_end_date": "<END_DATE>",
+    "parent": "<EMPLOYEE_PARENT_ID>"
+  }
+]
+```
+
+This endpoint allows the broker to update Angle Health if an employee needs to be removed from coverage. The last day of coverage is returned from Angle Health's API to the client. Coverage for all dependents of the employee is also terminated. Coverage end date is returned for each member. 
+
 
 ### HTTP Request
 
-`GET http://example.com/kittens/<ID>`
+`POST http://api.anglehealth.com/termination`
 
-### URL Parameters
+### Body Parameters
 
 Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+last_work_date | This indicates the employee's last work date. 
 
-## Delete a Specific Kitten
 
-```ruby
-require 'kittn'
+## Demographic Change
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
 
 ```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/demographic_change"
 ```
 
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
+> Body Parameter
 
 ```json
 {
-  "id": 2,
-  "deleted" : ":("
+  "member_changes": [
+    {
+      "id": "<ID>",
+      "<key>": "<val>"
+    },
+    {
+      "id": "<ID>",
+      "<key>": "<val>"
+    }
+  ]
 }
 ```
 
-This endpoint deletes a specific kitten.
+> The above command returns the following response:
+
+```json
+{
+  "response" : "updated"
+}
+```
+
+This endpoint allows the client to update Angle Health if an employee or member experiences a demographic change. Angle Health sends a response indicating that the update has been recorded. To track changes, the client should refer to the `member_snapshot` and `group_snapshot` routes. 
+ 
 
 ### HTTP Request
 
-`DELETE http://example.com/kittens/<ID>`
+`POST http://api.anglehealth.com/demographic_change`
 
-### URL Parameters
+### Body Schema
+
+Key | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+name_change | Should be an object with keys `first_name`, `middle_name`, `last_name`, `suffix`.
+address_change | Should be an object with keys `home_address`, `mailing_address`
+contact_change | Object with keys `home_phone`, `work_phone`, `email_address`, `email_address_type`
+ssn_change | New ssn 
+dob_change | New dob
+sex_change | New sex. One of `F` or `M`
+employment_change | `hire_date`, `employment_status`, `occupation`, `hours_worked` are keys to be included 
+
+You may provide multiple keys for each element in the `member_changes` array. They should conform to the schema above. 
+
+
+## Qualifying Life Events
+
+
+```shell
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/qualifying_life_event"
+```
+
+> Body Parameter
+
+```json
+{
+  "event": "<EVENT>",
+  "event_date": "<MM/DD/YYYY>",
+  "lines_of_coverage": [
+    {
+      "id": "<ID>",
+      "line_of_coverage": "medical",
+      "plan_name": "bronze_ppo",
+      "coverage_status": "adding_coverage"
+    },
+    {
+      "id": "<ID>",
+      "line_of_coverage": "dental",
+      "plan_name": "delta_dental",
+      "coverage_status": "removing_coverage",
+    }
+  ]
+}
+```
+
+> The above command returns the following response:
+
+```json
+{ "<ID>": 
+{
+  "id": "<ID>",
+  "coverage_start_date": "<MM/DD/YY>",
+  "coverage_end_date": "<MM/DD/YY>",
+  "rate": "<RATE>",
+  "parent": "<ID>"
+},
+  "<ID>" : 
+  {
+    "id": "<ID>",
+    "coverage_end_date": "<END_DATE>",
+    "parent": "<ID>"
+  }
+}
+```
+
+This endpoint allows the client to update coverage for an employee or dependent due to qualifying life events. Coverage can be added or removed. 
+ 
+
+### HTTP Request
+
+`POST http://api.anglehealth.com/qualifying_life_event`
+
+### Body Parameters
+
+Key | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+event_type | A string representing the event type triggering the change in coverage. 
+event_date | A date string. This is used to set coverage start and end dates. 
+line_of_coverage | Either medical or dental
+plan_name | The name of the Angle Health plan for which coverage is changing. 
+coverage_status | Should either be `adding_coverage` or `removing coverage`. 
+
+Each element in `lines_of_coverage` must add coverage or remove coverage for a given id. The `event_date` will be used to determine coverage start and end dates as noted in the table above. 
+
+## Open Enrollment
+
+This endpoint allows the client to change coverage for employees and dependents during the open enrollment period. Requests and responses are identical to the qualifying life events route and hence examples are omitted. 
+
+`POST http://api.anglehealth.com/open_enrollment`
+
+
+
+# Snapshot Routes 
+
+These routes allow the client to capture member and group snapshots. This allows the client to audit transactions and capture data for a group, member or employee at any given point in time. 
+
+## Member Snapshot
+
+```shell
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/member_snapshot"
+```
+
+> Body Parameter
+
+```json
+{
+  "id" : "<ID>"
+}
+```
+
+> The above command returns the following response:
+
+```json
+{
+    "id": "<ID>",
+    "member_type": "employee",
+    "first_name": "<FIRST_NAME>",
+    "last_name": "<LAST_NAME>",
+    "home_address": "<HOME_ADDRESS>",
+    "mailing_address": "<MAILING_ADDRESS>",
+    "dob": "<DOB>",
+    "ssn": "<SSN>",
+    "sex": "<sex>",
+    "marital_status": "<MARITAL_STATUS>",
+    "contact": "<CONTACT>",
+    "employment": "<EMPLOYMENT>",
+    "medical": "<MEDICAL PLAN COVERAGE>",
+    "dental": "DENTAL PLAN CONVERAGE>",
+    "vision": "VISION PLAN COVERAGE">,
+    "parent": "<PARENT_ID>",
+    "relationship": "<RELATIONSHIP_TO_PARENT>"
+}
+```
+
+This endpoint allows the client to get a snapshot of any member. Note the `parent` key links the member to the related employee. The `relationship` key captures the relationship between the member and employee. 
+
+
+### HTTP Request
+
+`POST http://api.anglehealth.com/member_snapshot`
+
+### Body Parameters
 
 Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+
+
+## Group Snapshot
 
