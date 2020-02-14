@@ -4,13 +4,6 @@ title: API Reference
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
 
-toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
-
-includes:
-  - errors
-
 search: true
 ---
 
@@ -61,7 +54,57 @@ You must replace <code>AUTH_TOKEN</code> with your authentication token in subse
 
 # Plan Coverage Routes
 
-## dhdhhd
+## Plan Coverage Data
+```shell
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/member_snapshot"
+```
+
+> Body Parameter
+
+```json
+{
+  "id" : "<ID>"
+}
+```
+
+> The above command returns the following response:
+
+```json
+{
+    "id": "<ID>",
+    "member_type": "employee",
+    "first_name": "<FIRST_NAME>",
+    "last_name": "<LAST_NAME>",
+    "home_address": "<HOME_ADDRESS>",
+    "mailing_address": "<MAILING_ADDRESS>",
+    "dob": "<DOB>",
+    "ssn": "<SSN>",
+    "sex": "<sex>",
+    "marital_status": "<MARITAL_STATUS>",
+    "contact": "<CONTACT>",
+    "employment": "<EMPLOYMENT>",
+    "medical": "<MEDICAL PLAN COVERAGE>",
+    "dental": "DENTAL PLAN CONVERAGE>",
+    "vision": "VISION PLAN COVERAGE">,
+    "parent": "<PARENT_ID>",
+    "relationship": "<RELATIONSHIP_TO_PARENT>"
+}
+```
+
+This endpoint allows the client to get a snapshot of any member. Note the `parent` key links the member to the related employee. The `relationship` key captures the relationship between the member and employee. 
+
+
+### HTTP Request
+
+`POST http://api.anglehealth.com/member_snapshot`
+
+### Body Parameters
+
+Parameter | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
 
 # Member Routes
 
@@ -83,12 +126,14 @@ curl -X POST
       "enrolling_members": [
         {"id": "<ID>",
          "member_type": "employee",
-         "plan_name": "delta_dental"
+         "plan_name": "delta_dental",
+         "group_id": "<GROUP_ID>"
 
         },
         {"id": "<ID>",
          "member_type": "dependent",
-         "plan_name": "delta_dental"
+         "plan_name": "delta_dental",
+         "group_id": "<GROUP_ID>"
         }
       ]
     }, 
@@ -97,11 +142,13 @@ curl -X POST
       "enrolling_members": [
         {"id": "<ID>",
          "member_type": "employee",
-         "plan_name": "silver_ppo"
+         "plan_name": "silver_ppo",
+         "group_id": "<GROUP_ID>"
         },
         {"id": "<ID>",
          "member_type": "dependent",
-         "plan_name": "bronze_epo"
+         "plan_name": "bronze_epo",
+         "group_id": "<GROUP_ID>"
 
         }
       ]
@@ -117,18 +164,34 @@ curl -X POST
   {
     "id": "<ID>",
     "member_type": "employee",
-    "coverage_start_date": "<MM/DD/YY>",
-    "coverage_end_date": "<MM/DD/YY>",
-    "rate": "<RATE>",
-    "parent": "<ID>"
+    "dental": {
+      "coverage_start_date": "<MM/DD/YY>",
+      "coverage_end_date": "<MM/DD/YY>",
+      "rate": "<RATE>",
+      "parent": "<EMPLOYEE_PARENT_ID>"
+    },
+    "medical": {
+      "coverage_start_date": "<MM/DD/YY>",
+      "coverage_end_date": "<MM/DD/YY>",
+      "rate": "<RATE>",
+      "parent": "<EMPLOYEE_PARENT_ID>"
+    }
   },
   {
     "id": "<ID>",
     "member_type": "dependent",
-    "coverage_start_date": "<MM/DD/YY>",
-    "coverage_end_date": "<MM/DD/YY>",
-    "rate": "<RATE>",
-    "parent": "<EMPLOYEE_PARENT_ID>"
+    "dental": {
+      "coverage_start_date": "<MM/DD/YY>",
+      "coverage_end_date": "<MM/DD/YY>",
+      "rate": "<RATE>",
+      "parent": "<EMPLOYEE_PARENT_ID>"
+    },
+    "medical": {
+      "coverage_start_date": "<MM/DD/YY>",
+      "coverage_end_date": "<MM/DD/YY>",
+      "rate": "<RATE>",
+      "parent": "<EMPLOYEE_PARENT_ID>"
+    }
   }
 ]
 ```
@@ -150,6 +213,7 @@ Parameter | Description
 id | The id is set and maintained by the client. This will be used to query member information.
 member_type | This indicates whether the member is an employee or dependent. 
 plan_name | Name of the Angle Health plan
+group_id | This is the id of the group in which the member belongs. 
 
 ## Termination
 
@@ -196,7 +260,7 @@ curl -X POST
 ]
 ```
 
-This endpoint allows the broker to update Angle Health if an employee needs to be removed from coverage. The last day of coverage is returned from Angle Health's API to the client. Coverage for all dependents of the employee is also terminated. Coverage end date is returned for each member. 
+This endpoint allows the client to update Angle Health's systems if an employee needs to be removed from coverage. The last day of coverage is returned from Angle Health's API to the client. Coverage for all dependents of the employee is also terminated. Coverage end date is returned for each member. 
 
 
 ### HTTP Request
@@ -347,6 +411,112 @@ This endpoint allows the client to change coverage for employees and dependents 
 `POST http://api.anglehealth.com/open_enrollment`
 
 
+## Group Enrollment
+
+```shell
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/register_group"
+```
+
+> Body Parameter
+
+```json
+{
+  "group_id": "<GROUP_ID>",
+  "group_name": "<GROUP_NAME>",
+  "group_address": "<GROUP_ADDRESS>",
+  "lines_of_coverage": {
+    "dental": {
+      "enrolling_members": [
+        {"id": "<ID>",
+         "member_type": "employee",
+         "plan_name": "delta_dental"
+
+        },
+        {"id": "<ID>",
+         "member_type": "dependent",
+         "plan_name": "delta_dental"
+        }
+      ]
+    }, 
+
+    "medical": {
+      "enrolling_members": [
+        {"id": "<ID>",
+         "member_type": "employee",
+         "plan_name": "silver_ppo"
+        },
+        {"id": "<ID>",
+         "member_type": "dependent",
+         "plan_name": "bronze_epo"
+
+        }
+      ]
+    }
+  }
+}
+```
+
+> The above command returns the following response:
+
+```json
+{
+  "group_id": "<GROUP_NAME>", 
+  "member_coverage": [
+    {
+      "id": "<ID>",
+      "member_type": "employee",
+      "dental": {
+        "coverage_start_date": "<MM/DD/YY>",
+        "coverage_end_date": "<MM/DD/YY>",
+        "rate": "<RATE>",
+        "parent": "<EMPLOYEE_PARENT_ID>"
+      },
+      "medical": {
+        "coverage_start_date": "<MM/DD/YY>",
+        "coverage_end_date": "<MM/DD/YY>",
+        "rate": "<RATE>",
+        "parent": "<EMPLOYEE_PARENT_ID>"
+      }
+    },
+    {
+      "id": "<ID>",
+      "member_type": "dependent",
+      "dental": {
+        "coverage_start_date": "<MM/DD/YY>",
+        "coverage_end_date": "<MM/DD/YY>",
+        "rate": "<RATE>",
+        "parent": "<EMPLOYEE_PARENT_ID>"
+      },
+      "medical": {
+        "coverage_start_date": "<MM/DD/YY>",
+        "coverage_end_date": "<MM/DD/YY>",
+        "rate": "<RATE>",
+        "parent": "<EMPLOYEE_PARENT_ID>"
+      }
+    }
+  ]
+}
+```
+
+This endpoint allows the client to enroll employees and dependents from a new group to Angle Health plans.  
+
+### HTTP Request
+
+`POST http://api.anglehealth.com/register_group`
+
+### Body Parameters
+
+Parameter | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+member_type | This indicates whether the member is an employee or dependent. 
+plan_name | Name of the Angle Health plan.
+group_name | Name of the group (company).
+group_address | Official address of the group.
+
+
 
 # Snapshot Routes 
 
@@ -373,6 +543,7 @@ curl -X POST
 ```json
 {
     "id": "<ID>",
+    "group_id": "<GROUP_ID>",
     "member_type": "employee",
     "first_name": "<FIRST_NAME>",
     "last_name": "<LAST_NAME>",
@@ -385,7 +556,7 @@ curl -X POST
     "contact": "<CONTACT>",
     "employment": "<EMPLOYMENT>",
     "medical": "<MEDICAL PLAN COVERAGE>",
-    "dental": "DENTAL PLAN CONVERAGE>",
+    "dental": "DENTAL PLAN COVERAGE>",
     "vision": "VISION PLAN COVERAGE">,
     "parent": "<PARENT_ID>",
     "relationship": "<RELATIONSHIP_TO_PARENT>"
@@ -408,3 +579,49 @@ id | The id is set and maintained by the client. This will be used to query memb
 
 ## Group Snapshot
 
+```shell
+curl -X POST
+ --header "Authorization: Bearer <ACCESS_TOKEN>"
+ "http://api.anglehealth.com/member_snapshot"
+```
+
+> Body Parameter
+
+```json
+{
+  "group_id" : "<GROUP_ID>",
+  "page_size": "<PAGE_SIZE>",
+  "offset": "<OFFSET>"
+}
+```
+
+> The above command returns the following response:
+
+```json
+{
+  "members": [
+    "<member object>",
+    "<member object>"
+  ],
+  "group_id": "<GROUP_ID>",
+  "group_name": "<GROUP_NAME>",
+  "group_address": "<GROUP_ADDRESS>"
+}
+
+```
+
+This endpoint allows the client to get a snapshot of any group. A group consists of a set of employees and their related dependents who elect for coverage under Angle Health plans. 
+
+
+### HTTP Request
+
+`POST http://api.anglehealth.com/member_snapshot`
+
+### Body & Response Parameters
+
+Parameter | Description
+--------- |  -----------
+id | The id is set and maintained by the client. This will be used to query member information.
+member object | The member object is defined in the response of the `Member Snapshot` section. 
+page size | This parameter specifies the number of records returned in the list. The default is `20` but cannot exceed `100`. 
+offset | The entry in the list at which to begin returning results, defaults to `0`. 
