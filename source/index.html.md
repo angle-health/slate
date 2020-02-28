@@ -82,7 +82,7 @@ curl -X POST
 }
 ```
 
-This endpoint allows the client to get a snapshot of any member. Note the `parent` key links the member to the related employee. The `relationship` key captures the relationship between the member and employee. 
+This endpoint allows the client to get metadata on any plan that Angle Health offers. This information is used to determine coverage dates, lines of coverage, rates and metal tiers.  
 
 
 ### HTTP Request
